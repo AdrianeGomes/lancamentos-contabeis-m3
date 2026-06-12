@@ -280,7 +280,7 @@ function loadLancamento() {
     <h2>📖 Lançamento ${lan.id} de ${lancamentos.length}</h2>
     <p>${lan.descricao}</p>
     <p style="font-size:13px;color:#555;margin-top:6px;">
-      Arraste cada conta para o lado correto (D ou C) do razonete correspondente.
+      Toque (ou arraste) cada conta para o lado correto (D ou C) do razonete correspondente.
     </p>
   `;
 
@@ -308,7 +308,7 @@ function loadLancamento() {
   `).join("");
 
   document.getElementById("feedback").innerHTML =
-    "💡 Toque (ou arraste) uma conta e depois toque no lado <strong>D</strong> ou <strong>C</strong> do razonete correto.";
+    "💡 Toque em uma conta e depois toque no lado <strong>D</strong> ou <strong>C</strong> do razonete correto.";
   document.getElementById("nextBtn").disabled  = true;
   document.getElementById("nextBtn").innerText =
     currentLancamento < lancamentos.length - 1 ? "➡ Próximo Lançamento" : "🏆 Ver Resultado Final";
