@@ -199,6 +199,7 @@ document.addEventListener("touchmove", e => {
   if (touchClone) {
     e.preventDefault();
     moveTouchClone(e.touches[0]);
+    autoScroll(e.touches[0].clientY);
   }
 }, { passive: false });
 
@@ -603,4 +604,14 @@ function moveTouchClone(touch) {
   if (!touchClone) return;
   touchClone.style.left = (touch.clientX - touchClone.offsetWidth  / 2) + "px";
   touchClone.style.top  = (touch.clientY - touchClone.offsetHeight / 2 - 30) + "px";
+}
+
+function autoScroll(touchY) {
+  const zona = 90; // pixels da borda para ativar o scroll
+  const velocidade = 10;
+  if (touchY > window.innerHeight - zona) {
+    window.scrollBy(0, velocidade);   // rola para baixo
+  } else if (touchY < zona) {
+    window.scrollBy(0, -velocidade);  // rola para cima
+  }
 }
