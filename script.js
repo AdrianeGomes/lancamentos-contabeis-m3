@@ -170,6 +170,18 @@ let touchClone   = null;
 let touchStartX  = 0;
 let touchStartY  = 0;
 
+// Retorna a coluna de razonete (.raz-col) sob o ponto de toque (por bounding rect)
+function getRazColAt(cx, cy) {
+  let found = null;
+  document.querySelectorAll(".raz-col").forEach(col => {
+    const r = col.getBoundingClientRect();
+    if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) {
+      found = col;
+    }
+  });
+  return found;
+}
+
 document.addEventListener("touchstart", e => {
   const card = e.target.closest(".card");
   if (!card || placedCards.has(card.id)) return;
@@ -181,37 +193,50 @@ document.addEventListener("touchstart", e => {
 
 document.addEventListener("touchmove", e => {
   if (!touchDragId) return;
-  const dx = e.touches[0].clientX - touchStartX;
-  const dy = e.touches[0].clientY - touchStartY;
-  // Criar clone só quando o dedo se mover (arrastar de verdade)
+  const t  = e.touches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+
+  // Criar clone só após 20px de movimento (confirma arraste)
   if (!touchClone && Math.sqrt(dx * dx + dy * dy) > 20) {
     const card = document.getElementById(touchDragId);
     if (card) {
+      const cloneWidth = Math.min(card.offsetWidth, 120);
       touchClone = card.cloneNode(true);
       touchClone.style.cssText = `
-        position: fixed; pointer-events: none; opacity: 0.9;
-        z-index: 9999; width: ${card.offsetWidth}px;
-        transform: scale(1.08); transition: none; border-radius: 8px;
+        position:fixed; pointer-events:none; opacity:0.9;
+        z-index:9999; width:${cloneWidth}px;
+        transform:rotate(2deg); transition:none; border-radius:8px;
+        box-shadow:0 6px 20px rgba(0,0,0,0.3); font-size:11px;
       `;
       document.body.appendChild(touchClone);
     }
   }
+
   if (touchClone) {
-    e.preventDefault(); // bloqueia scroll só quando clone já existe (arraste confirmado)
-    moveTouchClone(e.touches[0]);
-    autoScroll(e.touches[0].clientY);
+    e.preventDefault();
+    moveTouchClone(t);
+    autoScroll(t.clientY);
+    // Destacar coluna sob o dedo
+    document.querySelectorAll(".raz-col").forEach(col => {
+      const r = col.getBoundingClientRect();
+      const over = t.clientX >= r.left && t.clientX <= r.right &&
+                   t.clientY >= r.top  && t.clientY <= r.bottom;
+      col.classList.toggle("dragover", over);
+    });
   }
 }, { passive: false });
 
 document.addEventListener("touchend", e => {
-  const touch = e.changedTouches[0];
-  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
-  const col   = el ? el.closest(".raz-col") : null;
-  const match = col ? col.id.match(/^raz-(.+)-(debito|credito)$/) : null;
+  const t = e.changedTouches[0];
+  // Limpar destaques
+  document.querySelectorAll(".raz-col").forEach(col => col.classList.remove("dragover"));
 
   if (touchClone) {
-    // — fim do ARRASTAR —
+    // ── Fim do ARRASTE: detectar alvo por bounding rect ──
     touchClone.remove(); touchClone = null;
+    const col   = getRazColAt(t.clientX, t.clientY);
+    const match = col ? col.id.match(/^raz-(.+)-(debito|credito)$/) : null;
     if (match && touchDragId) {
       dropRaz(
         { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
@@ -220,9 +245,11 @@ document.addEventListener("touchend", e => {
     }
     touchDragId = null;
 
-  } else if (match && selectedCardId) {
-    // — toque simples no razonete após selecionar card —
-    tapRaz(match[1], match[2]);
+  } else if (selectedCardId) {
+    // ── TOQUE SIMPLES: verificar se tocou numa coluna ──
+    const col   = getRazColAt(t.clientX, t.clientY);
+    const match = col ? col.id.match(/^raz-(.+)-(debito|credito)$/) : null;
+    if (match) tapRaz(match[1], match[2]);
     touchDragId = null;
 
   } else {
@@ -383,33 +410,14 @@ function tapRaz(conta, lado) {
   selectedCardId = null;
 }
 
-// Toque direto na coluna do razonete (mobile)
+// Toque direto na coluna do razonete (fallback para toque simples no desktop/hybrid)
 function razTouchEnd(e, conta, lado) {
-  if (touchClone) {
-    // ── ARRASTE terminando nesta coluna ──
-    // Trata o drop aqui e impede que o document.touchend reprocesse
-    e.stopPropagation();
-    touchClone.remove();
-    touchClone = null;
-    if (touchDragId) {
-      dropRaz(
-        { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
-        conta, lado
-      );
-      touchDragId = null;
-    }
-  } else {
-    // ── TOQUE SIMPLES ──
-    e.stopPropagation();
-    if (selectedCardId) {
-      tapRaz(conta, lado);
-    } else if (touchDragId) {
-      dropRaz(
-        { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
-        conta, lado
-      );
-      touchDragId = null;
-    }
+  // O arraste é tratado pelo listener do documento (via getBoundingClientRect).
+  // Este handler só cobre o caso de toque simples que começa E termina na coluna.
+  if (touchClone) return; // arraste em andamento — documento trata
+  e.stopPropagation();
+  if (selectedCardId) {
+    tapRaz(conta, lado);
   }
 }
 
