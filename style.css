@@ -247,12 +247,11 @@ h1, h2, h3 { color: #0b2a5b; margin: 0 0 8px; }
 
 .raz-drop-hint {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
+  top: 4px;
+  right: 4px;
+  font-size: 13px;
   font-weight: bold;
-  color: #ccd6e8;
+  color: #c0cfe0;
   pointer-events: none;
   user-select: none;
 }

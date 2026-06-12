@@ -421,8 +421,6 @@ function dropRaz(event, contaAlvo, ladoAlvo) {
   // Inserir entrada no razonete
   const col = document.getElementById(`raz-${contaCard}-${ladoAlvo}`);
   if (col) {
-    const hint = col.querySelector(".raz-drop-hint");
-    if (hint) hint.remove();
     const entry = document.createElement("div");
     entry.className  = "raz-entry raz-entry-new";
     entry.innerHTML  = `<span class="raz-val">R$&nbsp;${format(value)}</span>`;
