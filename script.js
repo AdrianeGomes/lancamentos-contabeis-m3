@@ -567,11 +567,12 @@ function showResult() {
 //  GOOGLE SHEETS
 // =============================================
 function enviarParaSheet() {
+  const maxScore = lancamentos.length * 2 * 10;
   const payload = {
     nome:   alunoNome,
     email:  alunoEmail,
-    modulo: "Módulo 3 — Razonetes",
-    pontos: score,
+    modulo: "Módulo 3",
+    pontos: score + " / " + maxScore,
     data:   new Date().toLocaleString("pt-BR")
   };
   fetch(GOOGLE_SHEET_URL, {
