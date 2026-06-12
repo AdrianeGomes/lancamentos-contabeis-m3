@@ -3,7 +3,7 @@
 // =============================================
 
 const SENHA_ACESSO    = "logoscontabil26";
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyw_Pr0twNyOaHdUlKAZX0E5kfKSAbxA_PQ3i1dSIoV9ZdKycXJ4ZpZU6eHyts0rRhJ/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwVdqrdavJvJgaLW-0d0xypUjy-MwJHDcl79zTGrxiYNyYLBs7NvNVsmVLfUG2weAD5YA/exec";
 
 let alunoNome  = "";
 let alunoEmail = "";
