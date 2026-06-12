@@ -162,6 +162,68 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") verificarSenha(); });
 });
 
+// =============================================
+//  TOUCH DRAG — arrastar no celular
+// =============================================
+let touchDragId   = null;
+let touchClone    = null;
+
+document.addEventListener("touchstart", e => {
+  const card = e.target.closest(".card");
+  if (!card || placedCards.has(card.id)) return;
+  touchDragId = card.id;
+  selectCard(card.id);
+
+  // Criar clone visual que segue o dedo
+  touchClone = card.cloneNode(true);
+  touchClone.style.position   = "fixed";
+  touchClone.style.pointerEvents = "none";
+  touchClone.style.opacity    = "0.85";
+  touchClone.style.zIndex     = "9999";
+  touchClone.style.width      = card.offsetWidth + "px";
+  touchClone.style.transform  = "scale(1.05)";
+  document.body.appendChild(touchClone);
+  moveTouchClone(e.touches[0]);
+}, { passive: true });
+
+document.addEventListener("touchmove", e => {
+  if (!touchDragId) return;
+  moveTouchClone(e.touches[0]);
+}, { passive: true });
+
+document.addEventListener("touchend", e => {
+  if (!touchDragId) return;
+
+  // Remover clone visual
+  if (touchClone) { touchClone.remove(); touchClone = null; }
+
+  // Descobrir elemento sob o dedo
+  const touch = e.changedTouches[0];
+  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (el) {
+    const col = el.closest(".raz-col");
+    if (col) {
+      const match = col.id.match(/^raz-(.+)-(debito|credito)$/);
+      if (match) {
+        const conta = match[1];
+        const lado  = match[2];
+        dropRaz(
+          { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
+          conta,
+          lado
+        );
+      }
+    }
+  }
+  touchDragId = null;
+}, { passive: true });
+
+function moveTouchClone(touch) {
+  if (!touchClone) return;
+  touchClone.style.left = (touch.clientX - touchClone.offsetWidth  / 2) + "px";
+  touchClone.style.top  = (touch.clientY - touchClone.offsetHeight / 2) + "px";
+}
+
 function mostrarCadastro() {
   document.getElementById("intro").style.display    = "none";
   document.getElementById("registro").style.display = "block";
