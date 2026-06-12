@@ -184,7 +184,7 @@ document.addEventListener("touchmove", e => {
   const dx = e.touches[0].clientX - touchStartX;
   const dy = e.touches[0].clientY - touchStartY;
   // Criar clone só quando o dedo se mover (arrastar de verdade)
-  if (!touchClone && Math.sqrt(dx * dx + dy * dy) > 8) {
+  if (!touchClone && Math.sqrt(dx * dx + dy * dy) > 20) {
     const card = document.getElementById(touchDragId);
     if (card) {
       touchClone = card.cloneNode(true);
@@ -197,7 +197,7 @@ document.addEventListener("touchmove", e => {
     }
   }
   if (touchClone) {
-    e.preventDefault();
+    e.preventDefault(); // bloqueia scroll só quando clone já existe (arraste confirmado)
     moveTouchClone(e.touches[0]);
     autoScroll(e.touches[0].clientY);
   }
