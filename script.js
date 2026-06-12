@@ -165,39 +165,41 @@ document.addEventListener("DOMContentLoaded", () => {
 // =============================================
 //  TOUCH DRAG — arrastar no celular
 // =============================================
-let touchDragId = null;
-let touchClone  = null;
-let isDragging  = false;
+let touchDragId  = null;
+let touchClone   = null;
+let touchStartX  = 0;
+let touchStartY  = 0;
 
 document.addEventListener("touchstart", e => {
   const card = e.target.closest(".card");
   if (!card || placedCards.has(card.id)) return;
-
   touchDragId = card.id;
-  isDragging  = false;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
   selectCard(card.id);
-
-  // Clone visual que segue o dedo
-  touchClone = card.cloneNode(true);
-  touchClone.style.cssText = `
-    position: fixed;
-    pointer-events: none;
-    opacity: 0.9;
-    z-index: 9999;
-    width: ${card.offsetWidth}px;
-    transform: scale(1.08);
-    transition: none;
-    border-radius: 8px;
-  `;
-  document.body.appendChild(touchClone);
-  moveTouchClone(e.touches[0]);
-}, { passive: false });
+}, { passive: true });
 
 document.addEventListener("touchmove", e => {
   if (!touchDragId) return;
-  isDragging = true;
-  e.preventDefault(); // bloqueia scroll enquanto arrasta card
-  moveTouchClone(e.touches[0]);
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  // Criar clone só quando o dedo se mover (arrastar de verdade)
+  if (!touchClone && Math.sqrt(dx * dx + dy * dy) > 8) {
+    const card = document.getElementById(touchDragId);
+    if (card) {
+      touchClone = card.cloneNode(true);
+      touchClone.style.cssText = `
+        position: fixed; pointer-events: none; opacity: 0.9;
+        z-index: 9999; width: ${card.offsetWidth}px;
+        transform: scale(1.08); transition: none; border-radius: 8px;
+      `;
+      document.body.appendChild(touchClone);
+    }
+  }
+  if (touchClone) {
+    e.preventDefault();
+    moveTouchClone(e.touches[0]);
+  }
 }, { passive: false });
 
 document.addEventListener("touchend", e => {
@@ -206,23 +208,26 @@ document.addEventListener("touchend", e => {
   const col   = el ? el.closest(".raz-col") : null;
   const match = col ? col.id.match(/^raz-(.+)-(debito|credito)$/) : null;
 
-  if (touchDragId) {
+  if (touchClone) {
     // — fim do ARRASTAR —
-    if (touchClone) { touchClone.remove(); touchClone = null; }
-    if (match) {
+    touchClone.remove(); touchClone = null;
+    if (match && touchDragId) {
       dropRaz(
         { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
         match[1], match[2]
       );
     }
     touchDragId = null;
-    isDragging  = false;
 
-  } else if (selectedCardId && match) {
-    // — TOQUE no card e depois toque no razonete —
+  } else if (match && selectedCardId) {
+    // — toque simples no razonete após selecionar card —
     tapRaz(match[1], match[2]);
+    touchDragId = null;
+
+  } else {
+    touchDragId = null;
   }
-}, { passive: false });
+}, { passive: true });
 
 function mostrarCadastro() {
   document.getElementById("intro").style.display    = "none";
