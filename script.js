@@ -385,16 +385,31 @@ function tapRaz(conta, lado) {
 
 // Toque direto na coluna do razonete (mobile)
 function razTouchEnd(e, conta, lado) {
-  e.stopPropagation();
-  if (touchClone) return; // está arrastando — deixa o touchend do documento tratar
-  if (selectedCardId) {
-    tapRaz(conta, lado);
-  } else if (touchDragId) {
-    dropRaz(
-      { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
-      conta, lado
-    );
-    touchDragId = null;
+  if (touchClone) {
+    // ── ARRASTE terminando nesta coluna ──
+    // Trata o drop aqui e impede que o document.touchend reprocesse
+    e.stopPropagation();
+    touchClone.remove();
+    touchClone = null;
+    if (touchDragId) {
+      dropRaz(
+        { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
+        conta, lado
+      );
+      touchDragId = null;
+    }
+  } else {
+    // ── TOQUE SIMPLES ──
+    e.stopPropagation();
+    if (selectedCardId) {
+      tapRaz(conta, lado);
+    } else if (touchDragId) {
+      dropRaz(
+        { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
+        conta, lado
+      );
+      touchDragId = null;
+    }
   }
 }
 
