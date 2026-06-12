@@ -165,64 +165,68 @@ document.addEventListener("DOMContentLoaded", () => {
 // =============================================
 //  TOUCH DRAG — arrastar no celular
 // =============================================
-let touchDragId   = null;
-let touchClone    = null;
+let touchDragId = null;
+let touchClone  = null;
+let isDragging  = false;
 
 document.addEventListener("touchstart", e => {
   const card = e.target.closest(".card");
   if (!card || placedCards.has(card.id)) return;
+
   touchDragId = card.id;
+  isDragging  = false;
   selectCard(card.id);
 
-  // Criar clone visual que segue o dedo
+  // Clone visual que segue o dedo
   touchClone = card.cloneNode(true);
-  touchClone.style.position   = "fixed";
-  touchClone.style.pointerEvents = "none";
-  touchClone.style.opacity    = "0.85";
-  touchClone.style.zIndex     = "9999";
-  touchClone.style.width      = card.offsetWidth + "px";
-  touchClone.style.transform  = "scale(1.05)";
+  touchClone.style.cssText = `
+    position: fixed;
+    pointer-events: none;
+    opacity: 0.9;
+    z-index: 9999;
+    width: ${card.offsetWidth}px;
+    transform: scale(1.08);
+    transition: none;
+    border-radius: 8px;
+  `;
   document.body.appendChild(touchClone);
   moveTouchClone(e.touches[0]);
-}, { passive: true });
+}, { passive: false });
 
 document.addEventListener("touchmove", e => {
   if (!touchDragId) return;
+  isDragging = true;
+  e.preventDefault(); // bloqueia scroll enquanto arrasta card
   moveTouchClone(e.touches[0]);
-}, { passive: true });
+}, { passive: false });
 
 document.addEventListener("touchend", e => {
   if (!touchDragId) return;
 
-  // Remover clone visual
   if (touchClone) { touchClone.remove(); touchClone = null; }
 
-  // Descobrir elemento sob o dedo
   const touch = e.changedTouches[0];
-  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
+
+  // Esconder clone e achar elemento sob o dedo
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+
   if (el) {
     const col = el.closest(".raz-col");
     if (col) {
       const match = col.id.match(/^raz-(.+)-(debito|credito)$/);
       if (match) {
-        const conta = match[1];
-        const lado  = match[2];
         dropRaz(
           { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
-          conta,
-          lado
+          match[1],
+          match[2]
         );
       }
     }
   }
-  touchDragId = null;
-}, { passive: true });
 
-function moveTouchClone(touch) {
-  if (!touchClone) return;
-  touchClone.style.left = (touch.clientX - touchClone.offsetWidth  / 2) + "px";
-  touchClone.style.top  = (touch.clientY - touchClone.offsetHeight / 2) + "px";
-}
+  touchDragId = null;
+  isDragging  = false;
+}, { passive: false });
 
 function mostrarCadastro() {
   document.getElementById("intro").style.display    = "none";
@@ -577,4 +581,10 @@ function showPontos(pontos) {
 function updateScoreDisplay() {
   const el = document.getElementById("scoreDisplay");
   if (el) el.innerText = score;
+}
+
+function moveTouchClone(touch) {
+  if (!touchClone) return;
+  touchClone.style.left = (touch.clientX - touchClone.offsetWidth  / 2) + "px";
+  touchClone.style.top  = (touch.clientY - touchClone.offsetHeight / 2 - 30) + "px";
 }
