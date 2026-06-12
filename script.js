@@ -337,13 +337,15 @@ function addRazonete(conta) {
         <div class="raz-col raz-debito" id="raz-${conta}-debito"
           ondragover="allowDrop(event)"
           ondrop="dropRaz(event,'${conta}','debito')"
-          onclick="tapRaz('${conta}','debito')">
+          onclick="tapRaz('${conta}','debito')"
+          ontouchend="razTouchEnd(event,'${conta}','debito')">
           <div class="raz-drop-hint">D</div>
         </div>
         <div class="raz-col raz-credito" id="raz-${conta}-credito"
           ondragover="allowDrop(event)"
           ondrop="dropRaz(event,'${conta}','credito')"
-          onclick="tapRaz('${conta}','credito')">
+          onclick="tapRaz('${conta}','credito')"
+          ontouchend="razTouchEnd(event,'${conta}','credito')">
           <div class="raz-drop-hint">C</div>
         </div>
       </div>
@@ -378,6 +380,21 @@ function tapRaz(conta, lado) {
     lado
   );
   selectedCardId = null;
+}
+
+// Toque direto na coluna do razonete (mobile)
+function razTouchEnd(e, conta, lado) {
+  e.stopPropagation();
+  if (touchClone) return; // está arrastando — deixa o touchend do documento tratar
+  if (selectedCardId) {
+    tapRaz(conta, lado);
+  } else if (touchDragId) {
+    dropRaz(
+      { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
+      conta, lado
+    );
+    touchDragId = null;
+  }
 }
 
 function dropRaz(event, contaAlvo, ladoAlvo) {
