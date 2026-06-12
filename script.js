@@ -201,31 +201,27 @@ document.addEventListener("touchmove", e => {
 }, { passive: false });
 
 document.addEventListener("touchend", e => {
-  if (!touchDragId) return;
-
-  if (touchClone) { touchClone.remove(); touchClone = null; }
-
   const touch = e.changedTouches[0];
+  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
+  const col   = el ? el.closest(".raz-col") : null;
+  const match = col ? col.id.match(/^raz-(.+)-(debito|credito)$/) : null;
 
-  // Esconder clone e achar elemento sob o dedo
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-
-  if (el) {
-    const col = el.closest(".raz-col");
-    if (col) {
-      const match = col.id.match(/^raz-(.+)-(debito|credito)$/);
-      if (match) {
-        dropRaz(
-          { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
-          match[1],
-          match[2]
-        );
-      }
+  if (touchDragId) {
+    // — fim do ARRASTAR —
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    if (match) {
+      dropRaz(
+        { preventDefault: () => {}, dataTransfer: { getData: () => touchDragId } },
+        match[1], match[2]
+      );
     }
-  }
+    touchDragId = null;
+    isDragging  = false;
 
-  touchDragId = null;
-  isDragging  = false;
+  } else if (selectedCardId && match) {
+    // — TOQUE no card e depois toque no razonete —
+    tapRaz(match[1], match[2]);
+  }
 }, { passive: false });
 
 function mostrarCadastro() {
