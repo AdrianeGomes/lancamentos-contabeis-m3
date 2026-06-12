@@ -185,11 +185,12 @@ function getRazColAt(cx, cy) {
 document.addEventListener("touchstart", e => {
   const card = e.target.closest(".card");
   if (!card || placedCards.has(card.id)) return;
+  e.preventDefault(); // impede o iOS de capturar o toque para scroll
   touchDragId = card.id;
   touchStartX = e.touches[0].clientX;
   touchStartY = e.touches[0].clientY;
   selectCard(card.id);
-}, { passive: true });
+}, { passive: false });
 
 document.addEventListener("touchmove", e => {
   if (!touchDragId) return;
